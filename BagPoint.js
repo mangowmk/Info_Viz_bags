@@ -1,16 +1,4 @@
-var dotMouseRadius = 10;
-var bagInfoImgX = 0.3 * width;
-var bagInfoImgY = 0.7 * height;
-var bagInfoImgWidth = 0.2 * width;
-var bagInfoImgHeight = height - bagInfoImgY;
 
-var bagPointColor = 0;
-
-var bagNameX = 0.5 * width;
-var bagNameY = 0.2 * height;
-
-var bagNameTextColor = 0;
-var bagNameSize = 12;
 
 
 
@@ -20,7 +8,7 @@ function BagPoint(idx, startX, startY, brd, nm, stl, prc, bag_cl, sk_tp,vlm) {
   var brand = brd;
   var style = stl;
   var price = prc;
-  var bagColor = cl;
+  var bagColor = bag_cl;
   //var iconColor = cl;
   var skinType = sk_tp;
   
