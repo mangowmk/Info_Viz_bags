@@ -1,6 +1,5 @@
 'use strict';
 
-
 function SoftNum() {
   var ATTRACTION = 0.2;
   var DAMPING = 0.5;
@@ -31,13 +30,11 @@ function SoftNum() {
     this.attraction = arguments[2];
   }
 
-
   this.set = function(v) {
     this.value = v;
     this.target = v;
     this.targeting = false;
   }
-
 
   this.pin = function() {
     if (arguments.length == 1) {
@@ -47,16 +44,13 @@ function SoftNum() {
     this.targeting = false;
   }
 
-
   this.get = function() {
     return this.value;
   }
 
-
   this.getInt = function() {
     return Math.floor(this.value);
   }
-
 
   this.update = function() {
     if (this.targeting) {
