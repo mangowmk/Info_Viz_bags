@@ -5,19 +5,64 @@ var total;
 var bagPoints = [];
 var page = 'home';
 var bagInfo;
-var brands = ['Celine', 'Chanel', 'Dior', 'Fendi', 'Gucci', 'LV', 'Loewe', 'YSL'];
+var brands = ['Celine', 'Chanel', 'Dior', 'Fendi', 'Gucci', 'Louis Vitton', 'Loewe', 'Saint Laurent'];
+var styles = ['crossbody', 'shoulder', 'handbag'];
+var style_map = {'crossbody': ['Crossbody Bag', 'Crossbody Bag, Shoulder Bag', 'Crossbody Bag, Handbag', 'Crossbody Bag, Shoulder Bag, Handbag'],
+                 'shoulder': ['Shoulder Bag', 'Crossbody Bag, Shoulder Bag', 'Crossbody Bag, Shoulder Bag, Handbag', 'Shoulder Bag, Handbag'],
+                 'handbag': ['Handbag', 'Crossbody Bag, Shoulder Bag, Handbag', 'Shoulder Bag, Handbag', 'Crossbody Bag, Handbag']
+                };
 var bagNames = {};
 var bagImgs = {};
 
-var pages = ['Brand','Style', 'Price'];
+var pages = ['Style','Brand','All'];
+var pageSelected = {};
 var menuPageNum = pages.length;
 var menuPageTextSize = [20,20,20];
-
 var title = 'Stylish Style \n            & \n     Pricey Price';
 
+
+//Menu
+var menuInnerCircleRadius;
+var menuInnerCircleOriginX;
+var menuInnerCircleOriginY;
+var menuRingRadius;
+var menuRingOriginX;
+var menuRingOriginY;
+var menuRingWidth;
+var menuPageCircleRadius;
+var menuMainTextX;
+var menuMainTextY;
+
+var menuStartAngle;
+var menuEndAngle;
+
+var menuPageNum = pages.length;
+var menuPageDegrees = [];
+var menuPageXs = {};
+var menuPageYs = {};
+
+
+
+
+
+
+// Page
+//var brandCircleX;
+//var brandCircleY;
+//var styleCircleX;
+//var styleCircleY;
+var brand_icons = {};
+var brandInfo = {};
+var styleInfo = {};
+var subPageOrbitRadius;
+var subPageCircleRadius;
+
+
+
 // BagPoint
-var dotMouseRadius = 10;
+//var bagPointRadius = 1;
 var bagPointColor = 'black';
+var unselectedBagPointColor = 'lightgray';
 var bagNameTextColor = 'black';
 var bagNameSize = 16;
 var bagBrandSize = 20;
@@ -32,14 +77,16 @@ var bagPriceX;
 var bagPriceY;
 var bagVolumeX;
 var bagVolumeY;
+var bagPointRadius = 13;
 
 function preload(){
   bagInfo = loadTable("data/luxurybag_final_data.csv", "csv", 'header');
   font = loadFont("font/Skia.ttf");
-  fontB = loadFont("font/Recoleta-SemiBold.ttf");
+  fontB = loadFont("font/Recoleta-SemiBold.ttf"); 
+  
 }
 
-function setup() {
+function setup(){
   createCanvas(canvasWidth, canvasHeight);
   ctx = canvas.getContext('2d');
   bagImgLeftBottomX = 0.72 * width;
@@ -50,7 +97,7 @@ function setup() {
   bagPriceY = 0.48 * height;
   bagVolumeX = 0.785 * width;
   bagVolumeY = 0.48 * height;
-  
+  //frameRate(2);
   total = bagInfo.getRowCount();
   for (i = 0; i < total; i++){
     let brand = bagInfo.getString(i, 'brand');
@@ -62,17 +109,26 @@ function setup() {
     let volume = bagInfo.get(i, 'volume');
     let price = bagInfo.get(i, 'price ($)');
     let x_start = map(i, 0, total, 10, width - 10);
-    let y_start = 10;
+    let y_start = -10;
    
-    bagPoints.push(new BagPoint(i, x_start, y_start, brand, picName, name, style, price, bagColor, skinType, volume));
+    bagPoints.push(new BagPoint(i, x_start, y_start, brand, picName, name, style, price, bagColor, skinType, volume, true));
     if(!(brand in bagNames)){
       bagNames[brand] = [];
     }
     bagNames[brand].push(picName);
   }
+  
+  //Set all selection flags to false in initialization
+  for(let i=0; i<pages.length; i++){
+    pageSelected[pages[i]] = false;
+  }
+  
+  for(let i=0; i<pages.length; i++){
+    pageSelected[pages[i]] = false;
+  }
 
   // Load image
-  var imgPath;
+  let imgPath;
   for(var brand in bagNames){
     for(i = 0; i < bagNames[brand].length; i++){
           name_str = bagNames[brand][i].replace(/ /g, '_');
@@ -88,40 +144,74 @@ function setup() {
         bagImgs[bagNames[brand][i]] = loadImage(imgPath);
       }
   }  
-}
-
-function drawMenu(){
-  var menuInnerCircleRadius = 0.19 * width;
-  var menuInnerCircleOriginX = width;
-  var menuInnerCircleOriginY = height;
-  var menuRingRadius = 0.25 * width;
-  var menuRingOriginX = width;
-  var menuRingOriginY = height;
-  var menuRingWidth = 3;
-  var menuPageCircleRadius = 0.04 * width;
-
-  var menuStartAngle = PI * (1 + 1/12);
-  var menuEndAngle = PI *(3/2 - 1/12);
-  var menuPageNum = pages.length;
-  var menuPageDegrees = [];
-  var menuPageXs = [];
-  var menuPageYs = [];
   
+  menuInnerCircleRadius = 0.19 * width;
+  menuInnerCircleOriginX = width;
+  menuInnerCircleOriginY = height;
+  menuRingRadius = 0.25 * width;
+  menuRingOriginX = width;
+  menuRingOriginY = height;
+  menuRingWidth = 3;
+  menuPageCircleRadius = 0.04 * width;
+  menuStartAngle = PI * (1 + 1/12);
+  menuEndAngle = PI *(3/2 - 1/12);
+  subPageOrbitRadius = 0.07* width;
+  subPageCircleRadius = 0.015 * width;
+
+  
+  menuMainTextX = width - 0.75 * menuInnerCircleRadius;
+  menuMainTextY = height -  0.45 * menuInnerCircleRadius;
+ 
+  brands.forEach(function(brd){
+    let imgPathW = 'icon/logo_' + brd.replace(/ /g, '_') + 'W.png';
+    let imgPathB = 'icon/logo_' + brd.replace(/ /g, '_') + 'B.png';
+    
+    brandInfo[brd] = {};
+    brandInfo[brd].imgW = loadImage(imgPathW);
+    brandInfo[brd].imgB = loadImage(imgPathB);
+    brandInfo[brd].selected = false;
+  });
+  styles.forEach(function(stl){
+    let imgPathW = 'icon/logo_' + stl + 'W.png';
+    let imgPathB = 'icon/logo_' + stl + 'B.png';
+    styleInfo[stl] = {};
+    styleInfo[stl].imgW = loadImage(imgPathW);
+    styleInfo[stl].imgB = loadImage(imgPathB);
+    styleInfo[stl].selected = false;
+    
+  });
+  
+  
+  
+
+  for (let k = 0; k < pages.length; k++){
+    let curretDegree = map(k, 0, menuPageNum - 1, menuStartAngle, menuEndAngle);
+    menuPageDegrees.push(curretDegree);
+    menuPageXs[pages[k]] = cos(curretDegree) * menuRingRadius + menuRingOriginX;
+    menuPageYs[pages[k]] = sin(curretDegree) * menuRingRadius + menuRingOriginY;
+    }
+  
+  for(let i = 0; i < brands.length; i++){
+          initialSpeed = map(i, 0, brands.length - 1, 0.5, 0.7);
+          brandInfo[brands[i]].X = new SoftNum(menuPageXs.Brand, initialSpeed, 0.2);
+          brandInfo[brands[i]].Y = new SoftNum(menuPageYs.Brand, initialSpeed, 0.2);
+        }
+  for(let j = 0; j < styles.length; j++){
+          initialSpeed = map(j, 0, styles.length - 1, 0.5, 0.7);
+          styleInfo[styles[j]].X = new SoftNum(menuPageXs.Style, initialSpeed, 0.2);
+          styleInfo[styles[j]].Y = new SoftNum(menuPageYs.Style, initialSpeed, 0.2);
+        }
+  }
+
+      
+function drawMenu(){
+
   var menuRingColor = 'lightgray';
   var menuMainTextColor = 'white';
   var menuPageTextColor = 'black';
   var menuInnerCircleColor = 'black';
   var menuPageCircleColor = 'white';
-  
-  var menuMainTextX = width - 0.75 * menuInnerCircleRadius;
-  var menuMainTextY = height -  0.45 * menuInnerCircleRadius;
-
-  for (i = 0; i < pages.length; i++){
-  let curretDegree = map(i, 0, menuPageNum - 1, menuStartAngle, menuEndAngle);
-  menuPageDegrees.push(curretDegree);
-  menuPageXs.push(cos(curretDegree) * menuRingRadius + menuRingOriginX);
-  menuPageYs.push(sin(curretDegree) * menuRingRadius + menuRingOriginY);
-  }
+  var menuPageSelectedCircleColor = "#FFF1B6";
 
   push();
   //Draw outer ring
@@ -147,21 +237,34 @@ function drawMenu(){
   ctx.shadowColor = color (180,180,180);
   ctx.shadowBlur = 20;
   
-  for(j = 0; j < menuPageNum;j++){
-    fill(menuPageCircleColor);
-    circle(menuPageXs[j], menuPageYs[j], 2 * menuPageCircleRadius);
+  for(let j = 0; j < menuPageNum;j++){
+    if (pageSelected[pages[j]]){
+      fill(menuPageSelectedCircleColor);
+    }
+    else{
+      fill(menuPageCircleColor);
+    }
+    
+    circle(menuPageXs[pages[j]], menuPageYs[pages[j]], 2 * menuPageCircleRadius);
   }
   pop();
   noStroke();
   for(k = 0; k < menuPageNum;k++){
     fill(menuPageTextColor);
     textSize(menuPageTextSize[k]);
-    textFont(font);
+    if (pageSelected[pages[k]]){
+      textFont(fontB);
+    }else{
+      textFont(font);
+    }
+    
     textAlign(CENTER);
-    text(pages[k], menuPageXs[k], menuPageYs[k] + 5);
+    text(pages[k], menuPageXs[pages[k]], menuPageYs[pages[k]] + 5);
   }
   pop();
 }
+
+
 
 function drawPrice(){
   var AxisColor = 'black';
@@ -199,7 +302,7 @@ function drawPrice(){
   pop();
   
   // Draw Y info
-  for (var i = 0; i < volumeTicks.length; i++){
+  for (i = 0; i < volumeTicks.length; i++){
     push();
     strokeWeight(lineWeight);
     stroke(AxisColor);
@@ -218,7 +321,7 @@ function drawPrice(){
   }
   
   // Draw X info
-  for (var j = 0; j < priceTicks.length; j++){
+  for (j = 0; j < priceTicks.length; j++){
     priceTicksX = map(priceTicks[j], 0, priceAxisMax, AxisOriginX, maxPriceTickX);
     push();
     strokeWeight(lineWeight);
@@ -242,7 +345,7 @@ function drawPrice(){
   textFont(font);
   fill(AxisColor);
   textSize(ticksTextSize);
-  text('Vol / inch' + String.fromCodePoint(0x00B3), 100, 200);
+  text('Vol / in' + String.fromCodePoint(0x00B3), 100, 200);
   pop();
   
   // Draw bag points
@@ -254,12 +357,112 @@ function drawPrice(){
   });
 }
 
-function draw(){
-  background('white');
-  drawMenu();
-  drawPrice();
+
+function drawBrand(){
+  //var styleStartAngle = 
+  //var styleEndAngle;
+  
+
+  var subPageCircleColor = 'white';
+  var brandNum = brands.length;
+  
+  brands.forEach(function(brd){
+      push();
+      ctx.shadowColor = color (180,180,180);
+      ctx.shadowBlur = 10;
+      //brandInfo[brd].X.update();
+      //brandInfo[brd].Y.update();
+      let imgShow;
+      if (brandInfo[brd].selected){
+        imgShow = brandInfo[[brd]].imgB;
+      }else{
+        imgShow = brandInfo[[brd]].imgW;
+      }
+      image(imgShow, brandInfo[brd].X.value - subPageCircleRadius, 
+      brandInfo[brd].Y.value - subPageCircleRadius, 2 * subPageCircleRadius,  2 * subPageCircleRadius);
+      pop();
+  });
+}
+
+
+function drawStyle(){
+  //var styleStartAngle = 
+  //var styleEndAngle;
+  var subPageCircleRadius = 0.015 * width;
+
+  var subPageCircleColor = 'white';
+  var styleNum = styles.length;
+  
+  styles.forEach(function(stl){
+      push();
+      ctx.shadowColor = color (180,180,180);
+      ctx.shadowBlur = 10;
+      //styleInfo[stl].X.update();
+      //styleInfo[stl].Y.update();
+      let imgShow;
+      //console.log(styleInfo[stl].selected);
+      if (styleInfo[stl].selected){
+        imgShow = styleInfo[stl].imgB;
+      }else{
+        imgShow = styleInfo[stl].imgW;
+      }
+      image(imgShow, styleInfo[stl].X.value - subPageCircleRadius, 
+      styleInfo[stl].Y.value - subPageCircleRadius, 2 * subPageCircleRadius,  2 * subPageCircleRadius);
+      pop();
+  });
+}
+
+function updateSubPage(){
+  styles.forEach(function(stl){
+      styleInfo[stl].X.update();
+      styleInfo[stl].Y.update();
+  });
+  brands.forEach(function(brd){
+      brandInfo[brd].X.update();
+      brandInfo[brd].Y.update();
+  });
+}
+
+function drawPoints(){
+  
   let nearestMouseDistance = 1000;
   let nearestIndex; 
+  
+  if(pageSelected.Brand){
+    let selectedBrands = [];
+    brands.forEach(function(brd){
+      if (brandInfo[brd].selected){
+        selectedBrands.push(brd);
+      }
+    });
+    bagPoints.forEach(function(point){
+      if(selectedBrands.includes(point.getBrand())){
+        point.setSelected(true);
+      }
+      else{
+        point.setSelected(false);
+      }
+    });
+  }
+  
+  if(pageSelected.Style){
+    let selectedStyles = [];
+    styles.forEach(function(stl){
+      if(styleInfo[stl].selected){
+        selectedStyles = selectedStyles.concat(style_map[stl]);
+      }
+    });
+    console.log(selectedStyles);
+    bagPoints.forEach(function(point){
+      if(selectedStyles.includes(point.getStyle())){
+        point.setSelected(true);
+      }
+      else{
+        point.setSelected(false);
+      }
+    });
+  }
+  
   bagPoints.forEach(function(point){
     point.updatePosition();
     point.setNearest(false);
@@ -267,8 +470,14 @@ function draw(){
       nearestMouseDistance = point.getDistance();
       nearestIndex = point.getIndex();
     }
+    
   });
-  
+  if (nearestMouseDistance <= bagPointRadius){
+    cursor(HAND);
+  }else{
+    cursor(AUTO);
+  }
+
   bagPoints.forEach(function(point){
     //point.updatePosition();
     if (point.getIndex() == nearestIndex){
@@ -276,5 +485,143 @@ function draw(){
     }
     point.display();
   });
-  //noLoop();
+  
+}
+
+function draw(){
+  background('white');
+  drawMenu();
+  drawPrice();
+  if(pageSelected.Brand){
+    drawBrand();
+  }
+  if(pageSelected.Style){
+    drawStyle();
+  }
+  //if(pageSelected.All){
+
+  //}
+  updateSubPage();
+  drawPoints();
+  
+
+}
+
+
+
+
+function resetBrand(){
+  pageSelected.Brand = false;
+  for (let i = 0; i < brands.length; i++){
+      brandInfo[brands[i]].X.setTarget(menuPageXs.Brand);
+      brandInfo[brands[i]].Y.setTarget(menuPageYs.Brand);
+    }
+    
+    brands.forEach(function(brd){
+      brandInfo[brd].selected = true;
+    });
+    
+}
+
+function resetStyle(){
+  
+  pageSelected.Style = false;
+  for (let i = 0; i < styles.length; i++){
+      styleInfo[styles[i]].X.setTarget(menuPageXs.Style);
+      styleInfo[styles[i]].Y.setTarget(menuPageYs.Style);
+    }
+    
+  styles.forEach(function(stl){
+        styleInfo[stl].selected = true;
+    });
+    
+  
+}
+
+function clickedStyle(){
+    var styleStartAngle = - 150/180 * PI;
+    var styleEndAngle = - 210/180 * PI;
+    let styleNum = styles.length;
+    pageSelected.Style = true;
+    pageSelected.All = false;
+    
+    for (let i = 0; i < styleNum; i++){
+      let curretBrandDegree = map(i, 0, styleNum - 1, styleStartAngle, styleEndAngle);
+      let newX = cos(curretBrandDegree) * subPageOrbitRadius + menuPageXs.Style;
+      let newY = sin(curretBrandDegree) * subPageOrbitRadius + menuPageYs.Style;
+      styleInfo[styles[i]].X.setTarget(newX);
+      styleInfo[styles[i]].Y.setTarget(newY);
+    }
+    styles.forEach(function(stl){
+      styleInfo[stl].selected = false;
+    });
+    resetBrand();
+    
+}
+
+function clickedBrand(){
+    var brandStartAngle = - 10/180 * PI;
+    var brandEndAngle = - 260/180 * PI;
+    let brandNum = brands.length;
+    pageSelected.Brand = true;
+    pageSelected.All = false;
+    for (let i = 0; i < brandNum; i++){
+      let curretBrandDegree = map(i, 0, brandNum - 1, brandStartAngle, brandEndAngle);
+      let newX = cos(curretBrandDegree) * subPageOrbitRadius + menuPageXs.Brand;
+      let newY = sin(curretBrandDegree) * subPageOrbitRadius + menuPageYs.Brand;
+      brandInfo[brands[i]].X.setTarget(newX);
+      brandInfo[brands[i]].Y.setTarget(newY);
+     
+    }
+    brands.forEach(function(brd){
+      brandInfo[brd].selected = false;
+    });
+   resetStyle();
+}
+
+function clickedAll(){
+    
+   
+    pageSelected.All = true;
+    resetBrand();
+    resetStyle();
+    bagPoints.forEach(function(point){
+      point.setSelected(true);
+    });
+    
+}
+
+
+function mouseClicked(){
+
+  if(dist(mouseX, mouseY, menuPageXs.Brand,  menuPageYs.Brand) < menuPageCircleRadius){
+     clickedBrand();
+  }else if(dist(mouseX, mouseY, menuPageXs.Style, menuPageYs.Style) < menuPageCircleRadius){
+     clickedStyle();
+  }else if(dist(mouseX, mouseY, menuPageXs.All, menuPageYs.All) < menuPageCircleRadius){
+     clickedAll();
+  }else{
+    if(pageSelected.Brand){
+      brands.forEach(function(brd){
+        if(dist(mouseX, mouseY, brandInfo[brd].X.value, brandInfo[brd].Y.value) < subPageCircleRadius){
+          brandInfo[brd].selected = !brandInfo[brd].selected;
+        } 
+      });
+    }
+    
+   if(pageSelected.Style){
+    styles.forEach(function(stl){
+      if(dist(mouseX, mouseY, styleInfo[stl].X.value, styleInfo[stl].Y.value) < subPageCircleRadius){
+        styleInfo[stl].selected = !styleInfo[stl].selected;
+
+      } 
+    });
+  }
+    
+    
+  }
+  //console.log(pageSelected.Style);
+
+   //console.log(styleInfo);
+  
 }
