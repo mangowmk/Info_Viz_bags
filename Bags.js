@@ -207,7 +207,7 @@ function drawTitle(){
   var titleTextColor = 'black';
   var bigTitle = 'Stylish Style  &  Pricey Price';
   var subTitle = 'Exploring variations across brands in high-end bag market';
-  var corner = '©2022, Project by Mengke Wu & Youjia Li';
+  var corner = '©2022, Mengke Wu & Youjia Li, MIT 4.033 Information Design & Visualization';
   var titleX = 35;
   var titleY = 60;
   var subTitleX = titleX;
