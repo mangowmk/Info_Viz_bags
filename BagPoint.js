@@ -1,4 +1,4 @@
-function BagPoint(idx, startX, startY, brd, pnm, nm, stl, prc, bag_cl, sk_tp, vlm, sel) {
+function BagPoint(idx, startX, startY, brd, pnm, nm, stl, prc, bag_cl, sk_tp, vlm, w, h, d, sel) {
   var index = idx;
   var name = nm;
   var picName = pnm;
@@ -6,9 +6,11 @@ function BagPoint(idx, startX, startY, brd, pnm, nm, stl, prc, bag_cl, sk_tp, vl
   var style = stl;
   var price = prc;
   var bagColor = bag_cl;
-  //var iconColor = cl;
   var skinType = sk_tp;
   var volume = vlm;
+  var bagWidth = w;
+  var bagHeight = h;
+  var bagDepth = d;
   var nearestDot = false;
   var selected = sel;
  
@@ -26,44 +28,27 @@ function BagPoint(idx, startX, startY, brd, pnm, nm, stl, prc, bag_cl, sk_tp, vl
     push();
     if(selected){
       if(this.mouseHover() && nearestDot && selected){
-        fill('Red');
-      }else{
+        fill(selectedBagPointColor);
+        stroke('black');
+        strokeWeight(selectedBagPointStroke);
+      }
+      else{
         fill(bagPointColor);
+        stroke('lightgrey');
+        strokeWeight(unselectedBagPointStroke);
     }
-    }else{
+    }
+    else{
       fill(unselectedBagPointColor);
+      stroke('white');
+      strokeWeight(unselectedBagPointStroke);
     }
-   
-    strokeWeight(1);
-    stroke('lightgray');
+
     if (this.mouseHover() && nearestDot && selected){
       ellipse(x.value + bagPointRadius / 2, y.value + bagPointRadius / 2, bagPointRadius + 4, bagPointRadius + 4);
     }else{
       ellipse(x.value + bagPointRadius / 2, y.value + bagPointRadius / 2, bagPointRadius, bagPointRadius);
     }
-    
-    
-    //if (style == "Crossbody Bag"){
-      
-    //}
-    //else if(style == "Shoulder Bag"){
-    //  rect(x.value, y.value, 10, 15);
-    //}
-    //else if(style == "Handbag"){
-    //  rect(x.value, y.value, 13, 13);
-    //}
-    //else if(style == "Crossbody Bag, Shoulder Bag"){
-    //  rect(x.value, y.value, 10, 15, 2);
-    //}
-    //else if(style == "Shoulder Bag, Handbag"){
-    //  ellipse(x.value + 6, y.value + 6, 12, 16);
-    //}
-    //else if(style == "Crossbody Bag, Handbag"){
-    //  rect(x.value, y.value, 13, 13, 3);
-    //}
-    //else if(style == "Crossbody Bag, Shoulder Bag, Handbag"){
-    //  rect(x.value, y.value, 13, 13, 6);
-    //}
     pop();   
   };
   
@@ -112,31 +97,31 @@ function BagPoint(idx, startX, startY, brd, pnm, nm, stl, prc, bag_cl, sk_tp, vl
       push();
       textAlign(LEFT);
       // draw the value of this data point (using 1 decimal point)
-      textSize(bagNameSize);
+      textSize(fontSizeM);
       textFont(font);
       fill(bagNameColor);
       text(name, bagNameX, bagNameY);
       
-      textSize(bagBrandSize);
+      textSize(fontSizeL);
       textFont(fontB);
       fill(bagNameColor);
-      text(brand, bagNameX, bagNameY - bagBrandSize);
+      text(brand, bagNameX, bagNameY - fontSizeL);
 
-      textSize(bagPriceSize);
+      textSize(fontSizeXL);
       textFont(fontB);
       fill(bagNameColor);
-      text("$" + price, bagPriceX, bagPriceY);
+      text('$' + price, bagPriceX, bagPriceY);
        
-      textSize(bagVolumeSize);
+      textSize(fontSizeS);
       textFont(font);
       fill(bagNameColor);
-      text("/ " + volume + " inch"+ String.fromCodePoint(0x00B3), bagVolumeX, bagVolumeY);
+      text('/ ' + volume + ' in'+ String.fromCodePoint(0x00B3) + '  ( ' + bagWidth + '×' + bagHeight + '×' + bagDepth + ' )', bagVolumeX, bagVolumeY);
       pop();
   };
   
   this.displayBagImg = function(){
-  var bagInfoImgWidth = bagImgs[picName].width * 0.25;
-  var bagInfoImgHeight = bagImgs[picName].height * 0.25;
+  var bagInfoImgWidth = bagImgs[picName].width * 0.24;
+  var bagInfoImgHeight = bagImgs[picName].height * 0.24;
   image(bagImgs[picName], bagImgLeftBottomX, bagImgLeftBottomY - bagInfoImgHeight, bagInfoImgWidth, bagInfoImgHeight);
   };
   
